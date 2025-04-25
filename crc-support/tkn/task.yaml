@@ -75,6 +75,15 @@ spec:
     - name: debug
       description: increase verbosity
       default: 'false'
+    - name: debug-unbound
+      description: detect undefined env vars
+      default: 'false'
+    - name: debug-deliverest
+      description: debug deliverest entrypoint
+      default: 'false'
+    - name: debug-deliverest-unbound
+      description: debug deliverest entrypoint unbound-variables
+      default: 'false'
 
   results:
     - name: target-path
@@ -82,7 +91,7 @@ spec:
     
   steps:
   - name: preparer
-    image: quay.io/crc-org/ci-crc-support:v2.0.0-dev-$(params.os) 
+    image: quay.io/crc-org/ci-crc-support:v2.0.0-debug-$(params.os) 
     imagePullPolicy: Always
     volumeMounts:
       - name: host-secret
@@ -91,12 +100,17 @@ spec:
       #!/bin/bash
 
       if [ "$(params.debug)" = "true" ]; then
-        set -xuo 
+        set -xo
+      fi
+
+      if [ "$(params.debug-unbound)" = "true" ]; then
+        set -u
       fi
 
       # Prepare ENVs
       SECONDS=0
-      DEBUG=$(params.debug)
+      DEBUG=$(params.debug-deliverest)
+      DEBUG_UNBOUND=$(params.debug-deliverest-unbound)
       TARGET_HOST=$(cat /opt/host/host)
       TARGET_HOST_USERNAME=$(cat /opt/host/username)
       cp /opt/host/id_rsa id_rsa
